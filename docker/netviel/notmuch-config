@@ -1,0 +1,15 @@
+# Minimal notmuch(1) config; [database] path must match NOTMUCH_PATH in the app.
+# https://notmuchmail.org/manpages/
+
+[database]
+path=/app/mail
+
+[new]
+tags=unread;
+ignore=
+
+[search]
+exclude_tags=deleted;spam;
+
+[maildir]
+synchronize_flags=true

@@ -1,0 +1,28 @@
+# Copy to `config/mbsync/mbsync.rc` and replace account names, paths, and credentials.
+# See: https://isync.sourceforge.io/mbsync.html
+
+# IMAPAccount example.com
+# Host imap.example.com
+# User you@example.com
+# Pass your-app-password
+# SSLType IMAPS
+# CertificateFile /etc/ssl/certs/ca-certificates.crt
+
+# IMAPStore example.com-remote
+# Account example.com
+
+# MaildirStore example.com-local
+# SubFolders Verbatim
+# Path /mail/example.com/inbox/
+# Inbox /mail/example.com/inbox/Inbox
+
+# Channel example.com
+# Far :example.com-remote:
+# Near :example.com-local:
+# Patterns *
+# Create Near
+# Expunge None
+# Remove None
+# CopyArrivalDate yes
+# Sync Pull
+# SyncState *

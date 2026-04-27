@@ -1,0 +1,29 @@
+# Portainer stack using pre-built images from GitHub Container Registry.
+# Replace YOUR_GH_USER with your GitHub username or org (lowercase).
+# After your first CI build, use the tag you prefer: `latest`, `main`, or `sha-...`.
+
+services:
+  mbsync:
+    image: ghcr.io/YOUR_GH_USER/amail-mbsync:latest
+    container_name: amail-mbsync
+    volumes:
+      - /path/on/host/mbsync.rc:/config/mbsync.rc:ro
+      - /path/on/host/mail:/mail
+    environment:
+      TZ: UTC
+    restart: unless-stopped
+
+  netviel:
+    image: ghcr.io/YOUR_GH_USER/amail-netviel:latest
+    container_name: amail-netviel
+    depends_on:
+      - mbsync
+    ports:
+      - "5000:5000"
+    environment:
+      TZ: UTC
+      NOTMUCH_PATH: /app/mail
+    volumes:
+      - /path/on/host/mail:/mail:ro
+      - /path/on/host/notmuch:/app/mail/.notmuch
+    restart: unless-stopped

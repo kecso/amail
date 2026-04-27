@@ -1,0 +1,15 @@
+# Local secrets
+config/mbsync/mbsync.rc
+# Fetched mail and notmuch index (track empty dirs with .gitkeep)
+storage/mail/**
+!storage/mail/.gitkeep
+storage/notmuch/**
+!storage/notmuch/.gitkeep
+
+# Python
+__pycache__/
+.venv/
+*.pyc
+
+# OS
+.DS_Store
