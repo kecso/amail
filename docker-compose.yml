@@ -1,17 +1,4 @@
 services:
-  mbsync:
-    build:
-      context: .
-      dockerfile: docker/mbsync.Dockerfile
-    image: amail-mbsync:local
-    container_name: amail-mbsync
-    volumes:
-      - ./config/mbsync/mbsync.rc:/config/mbsync.rc:ro
-      - ./storage/mail:/mail
-    environment:
-      TZ: UTC
-    restart: unless-stopped
-
   netviel:
     build:
       context: .
@@ -24,6 +11,7 @@ services:
       TZ: UTC
       NOTMUCH_PATH: /app/mail
     volumes:
+      # Your Maildir tree from the host (e.g. where bare-metal mbsync writes)
       - ./storage/mail:/mail:ro
       - ./storage/notmuch:/app/mail/.notmuch
     restart: unless-stopped

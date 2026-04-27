@@ -1,0 +1,33 @@
+# Optional: full two-container stack (mbsync + netviel) as in
+# https://www.richyhbm.co.uk/posts/2023/simple-email-archive/
+# Use this only if mbsync is *not* already running on the host.
+
+services:
+  mbsync:
+    build:
+      context: .
+      dockerfile: docker/mbsync.Dockerfile
+    image: amail-mbsync:local
+    container_name: amail-mbsync
+    volumes:
+      - ./config/mbsync/mbsync.rc:/config/mbsync.rc:ro
+      - ./storage/mail:/mail
+    environment:
+      TZ: UTC
+    restart: unless-stopped
+
+  netviel:
+    build:
+      context: .
+      dockerfile: docker/netviel.Dockerfile
+    image: amail-netviel:local
+    container_name: amail-netviel
+    ports:
+      - "5000:5000"
+    environment:
+      TZ: UTC
+      NOTMUCH_PATH: /app/mail
+    volumes:
+      - ./storage/mail:/mail:ro
+      - ./storage/notmuch:/app/mail/.notmuch
+    restart: unless-stopped

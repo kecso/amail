@@ -1,23 +1,23 @@
 # amail
 
-**amail** is a small, self-hostable **mail backup + browser** stack: [mbsync](https://isync.sourceforge.io/mbsync.html) (isync) pulls mail from IMAP into **Maildir**, and [netviel](https://github.com/DavidMStraub/netviel) (with [notmuch](https://notmuchmail.org/)) provides a **web UI** to search and read that archive—without running a full IMAP server on top. It follows the same pattern described in the article below.
+**amail** is a small, self-hostable **Maildir archive browser** based on [netviel](https://github.com/DavidMStraub/netviel) and [notmuch](https://notmuchmail.org/): you point the container at a **Maildir** tree on the host, it keeps a private working copy and a **notmuch** index, and serves a web UI (port **5000**) to search and read mail—no IMAP server on top. It follows the **netviel half** of the flow described in the article below.
 
-**Original write-up (concept and design):** [Simple Email Archival and Indexing](https://www.richyhbm.co.uk/posts/2023/simple-email-archive/) (Richy HBM, 2023). This repository packages that idea as two production-ready images plus Compose for local use and CI-built images for **Portainer** (or any registry-driven stack).
+**Original write-up (concept and design):** [Simple Email Archival and Indexing](https://www.richyhbm.co.uk/posts/2023/simple-email-archive/) (Richy HBM, 2023). That post also used **mbsync** in Docker; in this repo the **default** is **netviel only** so you can keep **mbsync on bare metal** (or any other IMAP → Maildir sync) and only run the browser in Portainer. An **optional** compose file still wires up **mbsync + netviel** if you want the two-container story.
 
 ## What you get
 
 | Piece | Role |
 |--------|------|
-| **mbsync** | Periodically syncs IMAP → Maildir on disk |
-| **netviel** | Rsyncs a working copy, runs `notmuch new`, serves the UI on port **5000** |
+| **netviel** (default) | Rsyncs from your read-only Maildir mount, runs `notmuch new`, serves the UI on **5000** |
+| **mbsync** (optional) | Only if you use `docker-compose.with-mbsync.yml` — IMAP → Maildir inside Docker |
 
-The netviel service keeps your mounted Maildir **read-only** and maintains the notmuch database on a **separate volume** (`/app/mail/.notmuch`) so the index is durable and the source tree stays a clean backup.
+The netviel service keeps the mounted archive **read-only** and stores the notmuch database in a **separate volume** (`/app/mail/.notmuch`) so the source tree on disk stays a clean copy of what your real sync produced.
 
-**Security:** netviel is intended for **private/trusted** networks. Do not expose it to the public internet without authentication and TLS in front (reverse proxy, VPN, or both). The [upstream project](https://github.com/DavidMStraub/netviel#requirements) says the same.
+**Security:** netviel is for **private/trusted** networks. Do not expose it to the public internet without auth and TLS in front (reverse proxy, VPN, or both). The [upstream project](https://github.com/DavidMStraub/netviel#requirements) says the same.
 
-## Quick start (build locally)
+## Quick start (netviel only, local build)
 
-1. Copy `config/mbsync/mbsync.rc.example` to `config/mbsync/mbsync.rc` and fill in IMAP + Maildir paths (Gmail and others: use an app password where required).
+1. Point Compose at the Maildir your host already maintains (e.g. where **mbsync** writes), or use `./storage/mail` for a local test tree.
 2. From the repo root:
 
    ```bash
@@ -25,31 +25,40 @@ The netviel service keeps your mounted Maildir **read-only** and maintains the n
    docker compose up -d
    ```
 
-3. Open `http://localhost:5000` after the first mbsync run has written mail into `./storage/mail`.
+3. Open `http://localhost:5000` after that directory contains mail (and after the first `notmuch new` in the container has run).
 
-## Pre-built images (GitHub Container Registry)
+**Compose file:** `docker-compose.yml` (single `netviel` service).  
+**Optional mbsync in Docker:** `docker-compose.with-mbsync.yml` — also copy `config/mbsync/mbsync.rc.example` to `config/mbsync/mbsync.rc` and run:
 
-Pushes to the default branch build and push two images, for example:
+```bash
+docker compose -f docker-compose.with-mbsync.yml up -d
+```
 
-- `ghcr.io/<github-username>/amail-mbsync:latest`
-- `ghcr.io/<github-username>/amail-netviel:latest`
+## Pre-built image (GitHub Container Registry)
+
+CI publishes the **netviel** image (and, for the optional stack, **mbsync**), for example:
+
+- `ghcr.io/<github-username>/amail-netviel:latest`  
+- `ghcr.io/<github-username>/amail-mbsync:latest` (only needed for `docker-compose.with-mbsync.yml`)
 
 Tags also include the branch name and a short **git SHA** (e.g. `sha-abc1234`) so you can **pin a stack to an exact commit** in Portainer.
 
-**Package visibility:** in GitHub → *Packages* → each package → *Package settings*, set visibility to *Public* (or log in to GHCR from the host) if pulls should work without `docker login`.
+**Package visibility:** GitHub → *Packages* → each package → *Package settings* → *Public* (or `docker login ghcr.io` on the host) if you want unauthenticated pulls.
 
-## Portainer
+## Portainer (bare-metal mbsync + container netviel)
 
-1. Create the repo on GitHub under your user (e.g. `youruser/amail`) and push this project.
-2. Let Actions run once so both images exist on GHCR (or use *Run workflow* on *Build and push container images*).
-3. In Portainer, add a **stack** using `compose.portainer.example.yml` as a template: set host paths for `mbsync.rc`, mail, and notmuch, and replace `YOUR_GH_USER` with your GitHub name (lowercase). Optionally change image tags from `latest` to a **SHA tag** for reproducibility.
+1. Push the repo to GitHub and let Actions build **amail-netviel** (or run the workflow by hand).  
+2. Add a **stack** from `compose.portainer.example.yml`: set the host path to your **existing Maildir** (`/mail:ro` in the file) and a path for the **notmuch** index, and replace `YOUR_GH_USER`. You only need the **netviel** image.  
+3. To pin, use a tag like `sha-…` instead of `latest`.
+
+The optional two-image stack (mbsync + netviel) is in `compose.portainer.with-mbsync.example.yml`.
 
 ## Upstream and credits
 
 - **Article / idea:** <https://www.richyhbm.co.uk/posts/2023/simple-email-archive/>
 - **Web UI:** [DavidMStraub/netviel](https://github.com/DavidMStraub/netviel) (MIT)
 - **Index / search:** [notmuch](https://notmuchmail.org/)
-- **Sync:** [isync / mbsync](https://isync.sourceforge.io/)
+- **Sync (optional in Docker):** [isync / mbsync](https://isync.sourceforge.io/)
 
 ## License
 

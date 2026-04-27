@@ -1,0 +1,28 @@
+# Optional two-service stack: mbsync container + netviel (use only if you do not run mbsync on the host).
+# Replace YOUR_GH_USER and paths.
+
+services:
+  mbsync:
+    image: ghcr.io/YOUR_GH_USER/amail-mbsync:latest
+    container_name: amail-mbsync
+    volumes:
+      - /path/on/host/mbsync.rc:/config/mbsync.rc:ro
+      - /path/on/host/mail:/mail
+    environment:
+      TZ: UTC
+    restart: unless-stopped
+
+  netviel:
+    image: ghcr.io/YOUR_GH_USER/amail-netviel:latest
+    container_name: amail-netviel
+    depends_on:
+      - mbsync
+    ports:
+      - "5000:5000"
+    environment:
+      TZ: UTC
+      NOTMUCH_PATH: /app/mail
+    volumes:
+      - /path/on/host/mail:/mail:ro
+      - /path/on/host/notmuch-index:/app/mail/.notmuch
+    restart: unless-stopped
