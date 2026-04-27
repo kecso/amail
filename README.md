@@ -15,6 +15,10 @@ The netviel service keeps the mounted archive **read-only** and stores the notmu
 
 **Host install of notmuch?** **No.** The index path on the host is just an **empty directory** you choose (e.g. `mkdir -p /var/lib/amail-notmuch`); the container runs `notmuch` and **creates** the `.notmuch` database on first start. The bind mount only **persists** that data between container recreations.
 
+## Storage placement
+
+The path bound to `/app/mail/.notmuch` holds the **notmuch index** (Xapian full-text and metadata), not a cold archive. Search, thread views, and `notmuch new` are **index-heavy and latency-sensitive**, so that directory belongs on your **fast** tier (e.g. NVMe). The **Maildir** you mount read-only at `/mail` is the **bulk** data and can sit on capacious, slower storage (e.g. ZFS on HDDs) without the same penalty. A fast index still delivers the largest gain for **searching and listing**; opening individual messages also touches the **working copy** the container syncs to `/app/mail` (separate from the source mount in typical setups), so the biggest win for mixed-speed pools is to keep the **index** on NVMe.
+
 **Security:** netviel is for **private/trusted** networks. Do not expose it to the public internet without auth and TLS in front (reverse proxy, VPN, or both). The [upstream project](https://github.com/DavidMStraub/netviel#requirements) says the same.
 
 ## Quick start (netviel only, local build)
