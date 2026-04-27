@@ -2,6 +2,10 @@
 # Replace YOUR_GH_USER and host paths. Pin image tags to sha-... for a known-good commit.
 #
 # Pre-built: ghcr.io/<user>/amail-netviel
+#
+# The notmuch "index" path: use any empty directory on the host. You do *not* install notmuch
+# on the host — the container runs notmuch; this mount only persists the .notmuch database
+# (created on first run). mkdir -p that path first if needed.
 
 services:
   netviel:

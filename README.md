@@ -13,6 +13,8 @@
 
 The netviel service keeps the mounted archive **read-only** and stores the notmuch database in a **separate volume** (`/app/mail/.notmuch`) so the source tree on disk stays a clean copy of what your real sync produced.
 
+**Host install of notmuch?** **No.** The index path on the host is just an **empty directory** you choose (e.g. `mkdir -p /var/lib/amail-notmuch`); the container runs `notmuch` and **creates** the `.notmuch` database on first start. The bind mount only **persists** that data between container recreations.
+
 **Security:** netviel is for **private/trusted** networks. Do not expose it to the public internet without auth and TLS in front (reverse proxy, VPN, or both). The [upstream project](https://github.com/DavidMStraub/netviel#requirements) says the same.
 
 ## Quick start (netviel only, local build)

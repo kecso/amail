@@ -1,5 +1,6 @@
 # Optional two-service stack: mbsync container + netviel (use only if you do not run mbsync on the host).
-# Replace YOUR_GH_USER and paths.
+# Replace YOUR_GH_USER and paths. The notmuch index path can be an empty host directory — no notmuch
+# on the host; the netviel container creates and updates the index.
 
 services:
   mbsync:

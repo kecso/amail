@@ -13,5 +13,6 @@ services:
     volumes:
       # Your Maildir tree from the host (e.g. where bare-metal mbsync writes)
       - ./storage/mail:/mail:ro
+      # Persistent notmuch DB — empty dir is fine; container creates the index. No host notmuch required.
       - ./storage/notmuch:/app/mail/.notmuch
     restart: unless-stopped

@@ -29,5 +29,6 @@ services:
       NOTMUCH_PATH: /app/mail
     volumes:
       - ./storage/mail:/mail:ro
+      # Empty dir at first; container creates the notmuch DB (no host notmuch install)
       - ./storage/notmuch:/app/mail/.notmuch
     restart: unless-stopped
